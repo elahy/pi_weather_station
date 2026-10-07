@@ -29,7 +29,7 @@ def load_config(filename="config.json"):
     raise SystemExit("sample_interval_s must be a number from 1 to 60.")
   offset = config["temperature_offset_c"]
   if not finite_number(offset) or abs(offset) > 10:
-    raise SystemExit(Check temperature_offset_c; use 0 until calibration  is justified.")
+    raise SystemExit("Check temperature_offset_c; use 0 until calibration  is justified.")
   if type(config["retention_days"]) is not int or not 1<= config["retention_days"] <= 30:
     raise SystemExit("Project retention_days must be from 1 to 30; choose a justified value.")
   port = config.get("broker_port", 1883)
@@ -46,7 +46,7 @@ def finite_number(value):
   return isinstance(value, (int, float)) and not isinstance(value, bool) and math.isfinite(value)
 
 
-def clean_values(values)
+def clean_values(values):
   """Keep usable numbers; record why a missing or implausible value was rejected."""
   clean, errors = {}, []
   for field in MEASUREMENTS:
@@ -102,7 +102,7 @@ def validate_observation(row, expected_station=None):
   if type(row.get("valid")) is not bool or not isinstance(row.get("errors"), list):
     raise ValueError("Missing data-quality flag")
   if any(not isinstance(e, str) or len(e) > 250 for e in row["errors"]):
-    raise ValueError(Invalid error description")
+    raise ValueError("Invalid error description")
   _, errors = clean_values(row)
   if row["valid"] and (errors or row["errors"]):
     raise ValueError("A valid observation contains invalid measurements")
@@ -111,3 +111,7 @@ def validate_observation(row, expected_station=None):
       raise ValueError("Use null, not NaN, infinity or strings for a failed measurement")
   offset = row.get("temperature_offset_c")
   if not finite_number(offset) or abs(offset) > 10:
+    raise ValueError("Invalid calibration offset")
+  if not row["valid"] and not row["errors"]:
+    raise ValueError("An invalid observation needs a reason")
+  return row
